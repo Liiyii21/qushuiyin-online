@@ -456,8 +456,8 @@
         // 导航到登录/注册页面
         function navigateToAuth(event) {
             event.preventDefault();
-            const baseUrl = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
-            window.location.href = baseUrl + 'auth.html';
+            // 使用完整的 GitHub Pages URL
+            window.location.href = 'https://liiyii21.github.io/qushuiyin-online/auth.html';
             return false;
         }
 
