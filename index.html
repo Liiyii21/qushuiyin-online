@@ -317,8 +317,14 @@
 </head>
 <body>
     <div class="header-buttons">
-        <a href="auth.html" class="header-btn" onclick="return navigateToAuth(event)">📝 注册</a>
-        <a href="auth.html" class="header-btn" onclick="return navigateToAuth(event)">🔐 登录</a>
+        <div id="userInfo" style="display: none; display: flex; align-items: center; gap: 15px;">
+            <span id="username" style="color: #00d4ff; font-weight: 600;"></span>
+            <button id="logoutBtn" class="header-btn" style="padding: 8px 16px; font-size: 0.9em;">🚪 登出</button>
+        </div>
+        <div id="authButtons" style="display: flex; gap: 10px;">
+            <a href="auth.html" class="header-btn" onclick="return navigateToAuth(event)">📝 注册</a>
+            <a href="auth.html" class="header-btn" onclick="return navigateToAuth(event)">🔐 登录</a>
+        </div>
     </div>
     <div class="container">
         <header>
@@ -463,9 +469,38 @@
             return false;
         }
 
+        // 检查登录状态并显示用户信息
+        function checkLoginStatus() {
+            const currentUser = localStorage.getItem('video_tool_current_user') || sessionStorage.getItem('video_tool_current_user');
+            const userInfoDiv = document.getElementById('userInfo');
+            const authButtonsDiv = document.getElementById('authButtons');
+            const usernameSpan = document.getElementById('username');
+            const logoutBtn = document.getElementById('logoutBtn');
+            
+            if (currentUser) {
+                const user = JSON.parse(currentUser);
+                usernameSpan.textContent = `👤 ${user.username}`;
+                userInfoDiv.style.display = 'flex';
+                authButtonsDiv.style.display = 'none';
+                
+                // 登出功能
+                logoutBtn.addEventListener('click', function() {
+                    localStorage.removeItem('video_tool_current_user');
+                    sessionStorage.removeItem('video_tool_current_user');
+                    location.reload();
+                });
+            } else {
+                userInfoDiv.style.display = 'none';
+                authButtonsDiv.style.display = 'flex';
+            }
+        }
+
         // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', function() {
             console.log('页面已加载');
+            
+            // 检查登录状态
+            checkLoginStatus();
             
             // 添加隐藏的后台管理系统入口
             const logoElement = document.querySelector('.logo-click-area');
