@@ -628,15 +628,18 @@
 
         // 显示演示结果
         function showDemoResult(url, resultElement) {
+            // 使用一个可以工作的演示视频 URL
+            const demoVideoUrl = 'https://www.w3schools.com/html/mov_bbb.mp4';
+            
             document.getElementById('videoResultText').innerHTML = `
                 <div style="margin-bottom: 15px;">
                     <strong>✅ 链接已识别</strong><br><br>
                     <strong>视频标题：</strong> 示例视频<br>
                     <strong>视频描述：</strong> 这是一个演示视频<br>
                 </div>
-                <div style="margin-bottom: 15px; border-radius: 10px; overflow: hidden;">
-                    <video width="100%" height="auto" controls style="border-radius: 10px;">
-                        <source src="${url}" type="video/mp4">
+                <div style="margin-bottom: 15px; border-radius: 10px; overflow: hidden; background: #000;">
+                    <video width="100%" height="auto" controls style="border-radius: 10px; display: block;">
+                        <source src="${demoVideoUrl}" type="video/mp4">
                         您的浏览器不支持视频预览
                     </video>
                 </div>
@@ -660,7 +663,7 @@
             buttonGroup.className = 'button-group';
             buttonGroup.style.marginTop = '15px';
             buttonGroup.innerHTML = `
-                <button class="btn-primary" onclick="downloadVideo('${url}')">⬇️ 下载视频</button>
+                <button class="btn-primary" onclick="downloadVideo('${demoVideoUrl}')">⬇️ 下载视频</button>
                 <button class="btn-secondary" onclick="copyVideoLink()">📋 复制链接</button>
             `;
             
