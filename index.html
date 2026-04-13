@@ -314,8 +314,8 @@
 <body>
     <div class="container">
         <div class="header-buttons">
-            <button class="header-btn" onclick="goToAuth()">📝 注册</button>
-            <button class="header-btn" onclick="goToAuth()">🔐 登录</button>
+            <a href="auth.html" class="header-btn" onclick="return navigateToAuth(event)">📝 注册</a>
+            <a href="auth.html" class="header-btn" onclick="return navigateToAuth(event)">🔐 登录</a>
         </div>
 
         <header>
@@ -453,10 +453,11 @@
         let logoClickTimer = null;
 
         // 导航到登录/注册页面
-        function goToAuth() {
-            // 获取当前页面的基础 URL
+        function navigateToAuth(event) {
+            event.preventDefault();
             const baseUrl = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
             window.location.href = baseUrl + 'auth.html';
+            return false;
         }
 
         // 页面加载完成后初始化
