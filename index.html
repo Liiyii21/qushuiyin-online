@@ -570,6 +570,7 @@
 
             // 尝试多个 API
             const apis = [
+                // API 1: wxshares
                 {
                     url: 'https://api.wxshares.com/api/qsy/plus',
                     method: 'POST',
@@ -578,6 +579,22 @@
                         'Authorization': 'Bearer puM4bNPd7nBIFcRXBUgvfutGzE'
                     },
                     body: JSON.stringify({ url: url })
+                },
+                // API 2: 抖音/小红书通用 API
+                {
+                    url: 'https://api.douyin.com/aweme/v1/web/feed/',
+                    method: 'GET',
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0'
+                    }
+                },
+                // API 3: 视频解析服务
+                {
+                    url: 'https://vvhan.com/api/video',
+                    method: 'GET',
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0'
+                    }
                 }
             ];
 
@@ -593,29 +610,67 @@
                 const api = apis[apiIndex];
                 apiIndex++;
 
-                fetch(api.url, {
+                // 为 GET 请求添加 URL 参数
+                let fetchUrl = api.url;
+                if (api.method === 'GET') {
+                    fetchUrl = api.url + '?url=' + encodeURIComponent(url);
+                }
+
+                fetch(fetchUrl, {
                     method: api.method,
                     headers: api.headers,
-                    body: api.body
+                    body: api.method === 'POST' ? api.body : undefined
                 })
                 .then(response => response.json())
                 .then(data => {
-                    if (data.success || data.code === 0 || data.data) {
+                    if (data.success || data.code === 0 || data.data || data.url) {
                         const videoData = data.data || data;
-                        document.getElementById('videoResultText').innerHTML = `
-                            <div style="margin-bottom: 15px;">
-                                <strong>✅ 解析成功</strong><br><br>
-                                <strong>视频标题：</strong> ${videoData.title || '未获取'}<br>
-                                <strong>视频描述：</strong> ${videoData.desc || '未获取'}<br>
-                                <strong>无水印链接：</strong><br>
-                                <code style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 4px; display: block; word-break: break-all; font-size: 0.9em; margin-top: 8px;">
-                                    ${videoData.video || videoData.url || '获取中...'}
+                        const videoUrl = videoData.video || videoData.url || videoData.download_url || '';
+                        
+                        if (videoUrl) {
+                            document.getElementById('videoResultText').innerHTML = `
+                                <div style="margin-bottom: 15px;">
+                                    <strong>✅ 解析成功</strong><br><br>
+                                    <strong>视频标题：</strong> ${videoData.title || '未获取'}<br>
+                                    <strong>视频描述：</strong> ${videoData.desc || videoData.description || '未获取'}<br>
+                                </div>
+                            `;
+                            
+                            // 创建视频容器
+                            const videoContainer = document.createElement('div');
+                            videoContainer.style.cssText = 'margin-bottom: 15px; border-radius: 10px; overflow: hidden; background: #000;';
+                            videoContainer.innerHTML = `
+                                <video width="100%" height="auto" controls style="border-radius: 10px; display: block; max-width: 100%;">
+                                    <source src="${videoUrl}" type="video/mp4">
+                                    您的浏览器不支持视频预览
+                                </video>
+                            `;
+                            resultElement.appendChild(videoContainer);
+                            
+                            // 添加无水印链接
+                            const linkContainer = document.createElement('div');
+                            linkContainer.style.cssText = 'margin-top: 15px; padding: 15px; background: rgba(0, 212, 255, 0.1); border: 1px solid rgba(0, 212, 255, 0.3); border-radius: 10px;';
+                            linkContainer.innerHTML = `
+                                <strong style="color: #00d4ff;">🔗 无水印链接：</strong><br>
+                                <code style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 4px; display: block; word-break: break-all; font-size: 0.9em; margin-top: 8px; color: #00ff88;">
+                                    ${videoUrl}
                                 </code>
-                            </div>
-                        `;
-                    } else {
-                        tryNextApi();
+                            `;
+                            resultElement.appendChild(linkContainer);
+                            
+                            // 添加下载按钮
+                            const buttonGroup = document.createElement('div');
+                            buttonGroup.className = 'button-group';
+                            buttonGroup.style.marginTop = '15px';
+                            buttonGroup.innerHTML = `
+                                <button class="btn-primary" onclick="downloadVideo('${videoUrl}')">⬇️ 下载视频</button>
+                                <button class="btn-secondary" onclick="copyToClipboard('${videoUrl}')">📋 复制链接</button>
+                            `;
+                            resultElement.appendChild(buttonGroup);
+                            return;
+                        }
                     }
+                    tryNextApi();
                 })
                 .catch(error => {
                     console.error('API 错误:', error);
@@ -625,12 +680,19 @@
 
             tryNextApi();
         }
+        
+        // 复制到剪贴板
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showSuccess('videoSuccess', '✅ 链接已复制到剪贴板');
+            }).catch(() => {
+                alert('复制失败，请手动复制');
+            });
+        }
+        }
 
         // 显示演示结果
         function showDemoResult(url, resultElement) {
-            // 使用一个可以工作的演示视频 URL
-            const demoVideoUrl = 'https://www.w3schools.com/html/mov_bbb.mp4';
-            
             document.getElementById('videoResultText').innerHTML = `
                 <div style="margin-bottom: 15px;">
                     <strong>✅ 链接已识别</strong><br><br>
@@ -641,12 +703,13 @@
             
             // 创建视频容器（放在 result-text 之外）
             const videoContainer = document.createElement('div');
-            videoContainer.style.cssText = 'margin-bottom: 15px; border-radius: 10px; overflow: hidden; background: #000;';
+            videoContainer.style.cssText = 'margin-bottom: 15px; border-radius: 10px; overflow: hidden; background: #000; min-height: 300px; display: flex; align-items: center; justify-content: center;';
             videoContainer.innerHTML = `
-                <video width="100%" height="auto" controls style="border-radius: 10px; display: block; max-width: 100%;">
-                    <source src="${demoVideoUrl}" type="video/mp4">
-                    您的浏览器不支持视频预览
-                </video>
+                <div style="text-align: center; color: #00d4ff; padding: 40px;">
+                    <div style="font-size: 3em; margin-bottom: 15px;">🎬</div>
+                    <strong>演示视频播放器</strong><br>
+                    <span style="font-size: 0.9em; color: rgba(0, 212, 255, 0.7);">此为演示版本，完整功能请使用本地版本</span>
+                </div>
             `;
             resultElement.appendChild(videoContainer);
             
@@ -673,7 +736,6 @@
             buttonGroup.className = 'button-group';
             buttonGroup.style.marginTop = '15px';
             buttonGroup.innerHTML = `
-                <button class="btn-primary" onclick="downloadVideo('${demoVideoUrl}')">⬇️ 下载视频</button>
                 <button class="btn-secondary" onclick="copyVideoLink()">📋 复制链接</button>
             `;
             resultElement.appendChild(buttonGroup);
