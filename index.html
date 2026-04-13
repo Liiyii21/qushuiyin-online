@@ -385,7 +385,6 @@
     <script>
         let currentMode = 'standard';
 
-        // 閫夋嫨鏀瑰啓妯″紡
         function selectMode(mode, btn) {
             currentMode = mode;
             document.querySelectorAll('.mode-btn').forEach(b => {
@@ -394,7 +393,6 @@
             btn.classList.add('active');
         }
 
-        // 瑙ｆ瀽瑙嗛
         function parseVideo() {
             const url = document.getElementById('videoUrl').value.trim();
             const result = document.getElementById('videoResult');
@@ -416,7 +414,7 @@
                     <code style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 4px; display: block; word-break: break-all; font-size: 0.9em;">${url}</code><br><br>
                     <strong>璇存槑锛?/strong><br>
                     姝ゅ湪绾跨増鏈负婕旂ず鐗堟湰銆?br>
-                    瀹屾暣鍔熻兘璇蜂娇鐢ㄦ湰鍦扮増鏈垨閮ㄧ讲鐗堟湰銆?br><br>
+                    瀹屾暣鍔熻兘璇蜂娇鐢ㄦ湰鍦扮増鏈€?br><br>
                     <strong>鏈湴鐗堟湰鍔熻兘锛?/strong>
                     <ul style="margin-left: 20px; margin-top: 10px;">
                         <li>鉁?瀹屾暣鐨勮棰戣В鏋?/li>
@@ -429,7 +427,6 @@
             result.classList.add('show');
         }
 
-        // 澶嶅埗瑙嗛閾炬帴
         function copyVideoLink() {
             const url = document.getElementById('videoUrl').value;
             if (url) {
@@ -439,7 +436,6 @@
             }
         }
 
-        // 鏀瑰啓鏂囨
         function rewriteText() {
             const text = document.getElementById('originalText').value.trim();
             const result = document.getElementById('rewriteResult');
@@ -454,7 +450,6 @@
             result.classList.add('show');
         }
 
-        // 鏀瑰啓鍑芥暟
         function performRewrite(text, mode) {
             const replacements = {
                 standard: {
@@ -501,7 +496,6 @@
             return result;
         }
 
-        // 澶嶅埗鏀瑰啓缁撴灉
         function copyRewriteResult() {
             const text = document.getElementById('rewriteResultText').textContent;
             navigator.clipboard.writeText(text).then(() => {
@@ -509,7 +503,6 @@
             });
         }
 
-        // 涓嬭浇鏀瑰啓缁撴灉
         function downloadRewriteResult() {
             const text = document.getElementById('rewriteResultText').textContent;
             const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
@@ -521,7 +514,6 @@
             URL.revokeObjectURL(url);
         }
 
-        // 娓呯┖琛ㄥ崟
         function clearVideoForm() {
             document.getElementById('videoUrl').value = '';
             document.getElementById('videoResult').classList.remove('show');
@@ -532,7 +524,6 @@
             document.getElementById('rewriteResult').classList.remove('show');
         }
 
-        // 鏄剧ず鎴愬姛淇℃伅
         function showSuccess(elementId, message) {
             const element = document.getElementById(elementId);
             element.textContent = message;
