@@ -633,12 +633,18 @@
                     <strong>✅ 链接已识别</strong><br><br>
                     <strong>视频标题：</strong> 示例视频<br>
                     <strong>视频描述：</strong> 这是一个演示视频<br>
-                    <strong>无水印链接：</strong><br>
-                    <code style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 4px; display: block; word-break: break-all; font-size: 0.9em; margin-top: 8px;">${url}</code><br><br>
-                    <strong>📝 说明：</strong><br>
+                </div>
+                <div style="margin-bottom: 15px; border-radius: 10px; overflow: hidden;">
+                    <video width="100%" height="auto" controls style="border-radius: 10px;">
+                        <source src="${url}" type="video/mp4">
+                        您的浏览器不支持视频预览
+                    </video>
+                </div>
+                <div style="margin-top: 15px; padding: 15px; background: rgba(0, 212, 255, 0.1); border: 1px solid rgba(0, 212, 255, 0.3); border-radius: 10px;">
+                    <strong style="color: #00d4ff;">📝 说明：</strong><br>
                     此在线版本为演示版本，API 服务暂时不可用。<br>
                     完整功能请使用本地版本。<br><br>
-                    <strong>💻 本地版本功能：</strong>
+                    <strong style="color: #00d4ff;">💻 本地版本功能：</strong>
                     <ul style="margin-left: 20px; margin-top: 10px;">
                         <li>✓ 完整的视频解析</li>
                         <li>✓ 视频预览</li>
@@ -649,13 +655,13 @@
                 </div>
             `;
             
-            // 添加视频预览和下载按钮
+            // 添加下载按钮
             const buttonGroup = document.createElement('div');
             buttonGroup.className = 'button-group';
             buttonGroup.style.marginTop = '15px';
             buttonGroup.innerHTML = `
-                <button class="btn-primary" onclick="previewVideo('${url}')">👁️ 预览视频</button>
-                <button class="btn-secondary" onclick="downloadVideo('${url}')">⬇️ 下载视频</button>
+                <button class="btn-primary" onclick="downloadVideo('${url}')">⬇️ 下载视频</button>
+                <button class="btn-secondary" onclick="copyVideoLink()">📋 复制链接</button>
             `;
             
             resultElement.appendChild(buttonGroup);
