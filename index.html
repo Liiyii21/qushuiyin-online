@@ -637,26 +637,36 @@
                     <strong>视频标题：</strong> 示例视频<br>
                     <strong>视频描述：</strong> 这是一个演示视频<br>
                 </div>
-                <div style="margin-bottom: 15px; border-radius: 10px; overflow: hidden; background: #000;">
-                    <video width="100%" height="auto" controls style="border-radius: 10px; display: block;">
-                        <source src="${demoVideoUrl}" type="video/mp4">
-                        您的浏览器不支持视频预览
-                    </video>
-                </div>
-                <div style="margin-top: 15px; padding: 15px; background: rgba(0, 212, 255, 0.1); border: 1px solid rgba(0, 212, 255, 0.3); border-radius: 10px;">
-                    <strong style="color: #00d4ff;">📝 说明：</strong><br>
-                    此在线版本为演示版本，API 服务暂时不可用。<br>
-                    完整功能请使用本地版本。<br><br>
-                    <strong style="color: #00d4ff;">💻 本地版本功能：</strong>
-                    <ul style="margin-left: 20px; margin-top: 10px;">
-                        <li>✓ 完整的视频解析</li>
-                        <li>✓ 视频预览</li>
-                        <li>✓ 视频下载</li>
-                        <li>✓ 文案改写</li>
-                        <li>✓ 违禁词检测</li>
-                    </ul>
-                </div>
             `;
+            
+            // 创建视频容器（放在 result-text 之外）
+            const videoContainer = document.createElement('div');
+            videoContainer.style.cssText = 'margin-bottom: 15px; border-radius: 10px; overflow: hidden; background: #000;';
+            videoContainer.innerHTML = `
+                <video width="100%" height="auto" controls style="border-radius: 10px; display: block; max-width: 100%;">
+                    <source src="${demoVideoUrl}" type="video/mp4">
+                    您的浏览器不支持视频预览
+                </video>
+            `;
+            resultElement.appendChild(videoContainer);
+            
+            // 创建说明容器
+            const noteContainer = document.createElement('div');
+            noteContainer.style.cssText = 'margin-top: 15px; padding: 15px; background: rgba(0, 212, 255, 0.1); border: 1px solid rgba(0, 212, 255, 0.3); border-radius: 10px;';
+            noteContainer.innerHTML = `
+                <strong style="color: #00d4ff;">📝 说明：</strong><br>
+                此在线版本为演示版本，API 服务暂时不可用。<br>
+                完整功能请使用本地版本。<br><br>
+                <strong style="color: #00d4ff;">💻 本地版本功能：</strong>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li>✓ 完整的视频解析</li>
+                    <li>✓ 视频预览</li>
+                    <li>✓ 视频下载</li>
+                    <li>✓ 文案改写</li>
+                    <li>✓ 违禁词检测</li>
+                </ul>
+            `;
+            resultElement.appendChild(noteContainer);
             
             // 添加下载按钮
             const buttonGroup = document.createElement('div');
@@ -666,7 +676,6 @@
                 <button class="btn-primary" onclick="downloadVideo('${demoVideoUrl}')">⬇️ 下载视频</button>
                 <button class="btn-secondary" onclick="copyVideoLink()">📋 复制链接</button>
             `;
-            
             resultElement.appendChild(buttonGroup);
         }
 
