@@ -314,8 +314,8 @@
 <body>
     <div class="container">
         <div class="header-buttons">
-            <a href="auth.html" class="header-btn">📝 注册</a>
-            <a href="auth.html" class="header-btn">🔐 登录</a>
+            <button class="header-btn" onclick="goToAuth()">📝 注册</button>
+            <button class="header-btn" onclick="goToAuth()">🔐 登录</button>
         </div>
 
         <header>
@@ -451,6 +451,11 @@
         let currentMode = 'standard';
         let logoClickCount = 0;
         let logoClickTimer = null;
+
+        // 导航到登录/注册页面
+        function goToAuth() {
+            window.location.href = 'auth.html';
+        }
 
         // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', function() {
