@@ -570,31 +570,17 @@
 
             // 尝试多个 API
             const apis = [
-                // API 1: wxshares
+                // API 1: wxshares - 使用正确的配置
                 {
                     url: 'https://api.wxshares.com/api/qsy/plus',
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer puM4bNPd7nBIFcRXBUgvfutGzE'
+                        'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8'
                     },
-                    body: JSON.stringify({ url: url })
-                },
-                // API 2: 抖音/小红书通用 API
-                {
-                    url: 'https://api.douyin.com/aweme/v1/web/feed/',
-                    method: 'GET',
-                    headers: {
-                        'User-Agent': 'Mozilla/5.0'
-                    }
-                },
-                // API 3: 视频解析服务
-                {
-                    url: 'https://vvhan.com/api/video',
-                    method: 'GET',
-                    headers: {
-                        'User-Agent': 'Mozilla/5.0'
-                    }
+                    body: new URLSearchParams({
+                        key: 'puM4bNPd7nBIFcRXBUgvfutGzE',
+                        url: url
+                    }).toString()
                 }
             ];
 
@@ -610,29 +596,28 @@
                 const api = apis[apiIndex];
                 apiIndex++;
 
-                // 为 GET 请求添加 URL 参数
-                let fetchUrl = api.url;
-                if (api.method === 'GET') {
-                    fetchUrl = api.url + '?url=' + encodeURIComponent(url);
-                }
-
-                fetch(fetchUrl, {
+                fetch(api.url, {
                     method: api.method,
                     headers: api.headers,
-                    body: api.method === 'POST' ? api.body : undefined
+                    body: api.body
                 })
-                .then(response => response.json())
+                .then(response => {
+                    console.log('响应状态:', response.status);
+                    return response.json();
+                })
                 .then(data => {
-                    if (data.success || data.code === 0 || data.data || data.url) {
-                        const videoData = data.data || data;
-                        const videoUrl = videoData.video || videoData.url || videoData.download_url || '';
+                    console.log('API 响应:', data);
+                    
+                    if (data.code === 200 && data.data) {
+                        const videoData = data.data;
+                        const videoUrl = videoData.url || '';
                         
                         if (videoUrl) {
                             document.getElementById('videoResultText').innerHTML = `
                                 <div style="margin-bottom: 15px;">
                                     <strong>✅ 解析成功</strong><br><br>
                                     <strong>视频标题：</strong> ${videoData.title || '未获取'}<br>
-                                    <strong>视频描述：</strong> ${videoData.desc || videoData.description || '未获取'}<br>
+                                    <strong>视频描述：</strong> ${videoData.desc || '未获取'}<br>
                                 </div>
                             `;
                             
@@ -669,6 +654,8 @@
                             resultElement.appendChild(buttonGroup);
                             return;
                         }
+                    } else {
+                        console.log('API 返回错误:', data.msg);
                     }
                     tryNextApi();
                 })
