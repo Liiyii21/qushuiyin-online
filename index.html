@@ -1,167 +1,664 @@
-// 用户数据存储（使用 localStorage 模拟数据库）
-const USERS_KEY = 'video_tool_users';
-const CURRENT_USER_KEY = 'video_tool_current_user';
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>清影无痕去水印 - 在线版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-// DOM 元素
-const loginForm = document.getElementById('loginForm');
-const registerForm = document.getElementById('registerForm');
-const loginFormElement = document.getElementById('loginFormElement');
-const registerFormElement = document.getElementById('registerFormElement');
-const showRegisterLink = document.getElementById('showRegister');
-const showLoginLink = document.getElementById('showLogin');
-const messageDiv = document.getElementById('message');
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            color: #d4d4d4;
+            min-height: 100vh;
+            padding: 20px;
+        }
 
-// 获取所有用户
-function getUsers() {
-    const users = localStorage.getItem(USERS_KEY);
-    return users ? JSON.parse(users) : [];
-}
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
 
-// 保存用户
-function saveUser(user) {
-    const users = getUsers();
-    users.push(user);
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
-}
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px 0;
+        }
 
-// 查找用户
-function findUser(username) {
-    const users = getUsers();
-    return users.find(u => u.username === username);
-}
+        header h1 {
+            color: #00d4ff;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+        }
 
-// 显示消息
-function showMessage(text, type = 'success') {
-    messageDiv.textContent = text;
-    messageDiv.className = `message ${type}`;
-    messageDiv.classList.remove('hidden');
-    
-    setTimeout(() => {
-        messageDiv.classList.add('hidden');
-    }, 3000);
-}
+        header p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.1em;
+        }
 
-// 切换到注册表单
-showRegisterLink.addEventListener('click', (e) => {
-    e.preventDefault();
-    loginForm.classList.remove('active');
-    registerForm.classList.add('active');
-    messageDiv.classList.add('hidden');
-});
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
 
-// 切换到登录表单
-showLoginLink.addEventListener('click', (e) => {
-    e.preventDefault();
-    registerForm.classList.remove('active');
-    loginForm.classList.add('active');
-    messageDiv.classList.add('hidden');
-});
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            transition: all 0.3s ease;
+        }
 
-// 注册表单提交
-registerFormElement.addEventListener('submit', (e) => {
-    e.preventDefault();
-    
-    const username = document.getElementById('registerUsername').value.trim();
-    const password = document.getElementById('registerPassword').value;
-    const passwordConfirm = document.getElementById('registerPasswordConfirm').value;
-    const email = document.getElementById('registerEmail').value.trim();
-    
-    // 验证用户名
-    if (username.length < 3 || username.length > 20) {
-        showMessage('用户名长度必须在3-20个字符之间', 'error');
-        return;
-    }
-    
-    // 验证密码
-    if (password.length < 6) {
-        showMessage('密码长度至少6个字符', 'error');
-        return;
-    }
-    
-    // 验证密码确认
-    if (password !== passwordConfirm) {
-        showMessage('两次输入的密码不一致', 'error');
-        return;
-    }
-    
-    // 检查用户名是否已存在
-    if (findUser(username)) {
-        showMessage('用户名已存在，请换一个', 'error');
-        return;
-    }
-    
-    // 创建新用户
-    const newUser = {
-        username,
-        password, // 注意：实际项目中应该加密存储
-        email,
-        createdAt: new Date().toISOString()
-    };
-    
-    saveUser(newUser);
-    showMessage('注册成功！请登录', 'success');
-    
-    // 清空表单
-    registerFormElement.reset();
-    
-    // 2秒后切换到登录表单
-    setTimeout(() => {
-        registerForm.classList.remove('active');
-        loginForm.classList.add('active');
-    }, 2000);
-});
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px rgba(0, 212, 255, 0.2);
+            border-color: rgba(0, 212, 255, 0.3);
+        }
 
-// 登录表单提交
-loginFormElement.addEventListener('submit', (e) => {
-    e.preventDefault();
-    
-    const username = document.getElementById('loginUsername').value.trim();
-    const password = document.getElementById('loginPassword').value;
-    const rememberMe = document.getElementById('rememberMe').checked;
-    
-    // 查找用户
-    const user = findUser(username);
-    
-    if (!user) {
-        showMessage('用户名不存在', 'error');
-        return;
-    }
-    
-    // 验证密码
-    if (user.password !== password) {
-        showMessage('密码错误', 'error');
-        return;
-    }
-    
-    // 登录成功
-    const loginData = {
-        username: user.username,
-        email: user.email,
-        loginTime: new Date().toISOString(),
-        rememberMe
-    };
-    
-    // 保存登录状态
-    if (rememberMe) {
-        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(loginData));
-    } else {
-        sessionStorage.setItem(CURRENT_USER_KEY, JSON.stringify(loginData));
-    }
-    
-    showMessage('登录成功！正在跳转...', 'success');
-    
-    // 1.5秒后跳转到主页
-    setTimeout(() => {
-        window.location.href = 'index.html';
-    }, 1500);
-});
+        .card h2 {
+            color: #00d4ff;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
 
-// 页面加载时检查是否已登录
-window.addEventListener('DOMContentLoaded', () => {
-    const currentUser = localStorage.getItem(CURRENT_USER_KEY) || sessionStorage.getItem(CURRENT_USER_KEY);
-    
-    if (currentUser) {
-        // 已登录，直接跳转到主页
-        window.location.href = 'index.html';
-    }
-});
+        .input-section {
+            margin-bottom: 20px;
+        }
+
+        .input-section label {
+            display: block;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        input[type="text"],
+        input[type="url"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: white;
+            font-size: 1em;
+            font-family: inherit;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="url"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 150px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00d4ff 0%, #7877c6 100%);
+            color: white;
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 212, 255, 0.5);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .result-section {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .result-section.show {
+            display: block;
+        }
+
+        .result-section h3 {
+            color: #00d4ff;
+            margin-bottom: 10px;
+        }
+
+        .result-text {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            color: rgba(255, 255, 255, 0.9);
+            word-break: break-all;
+            line-height: 1.6;
+        }
+
+        .mode-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .mode-btn {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, #00d4ff 0%, #7877c6 100%);
+            color: white;
+            border-color: #00d4ff;
+        }
+
+        .mode-btn:hover {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: #00d4ff;
+            color: #00d4ff;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .feature-icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .feature-card h3 {
+            color: #00d4ff;
+            margin-bottom: 10px;
+        }
+
+        .feature-card p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.95em;
+        }
+
+        .header-buttons {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .header-btn {
+            padding: 10px 20px;
+            background: rgba(0, 212, 255, 0.2);
+            border: 1px solid rgba(0, 212, 255, 0.5);
+            border-radius: 8px;
+            color: #00d4ff;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .header-btn:hover {
+            background: rgba(0, 212, 255, 0.3);
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+        }
+
+        .logo-click-area {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            color: rgba(255, 255, 255, 0.5);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 40px;
+        }
+
+        .success-message {
+            background: rgba(0, 255, 136, 0.2);
+            border: 1px solid rgba(0, 255, 136, 0.4);
+            color: #00ff88;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-buttons">
+            <a href="auth.html" class="header-btn">📝 注册</a>
+            <a href="auth.html" class="header-btn">🔐 登录</a>
+        </div>
+
+        <header>
+            <h1 class="logo-click-area">🎬 清影无痕去水印</h1>
+            <p>专业视频处理 · 智能文案优化</p>
+        </header>
+
+        <div class="main-content">
+            <!-- 视频去水印 -->
+            <div class="card">
+                <h2>🎬 视频去水印</h2>
+                
+                <div class="input-section">
+                    <label>粘贴视频链接</label>
+                    <input type="url" id="videoUrl" placeholder="输入小红书/抖音/视频号分享链接...">
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-primary" onclick="parseVideo()">🔍 解析视频</button>
+                    <button class="btn-secondary" onclick="clearVideoForm()">🗑️ 清空</button>
+                </div>
+
+                <div class="result-section" id="videoResult">
+                    <h3>✅ 解析成功</h3>
+                    <div class="result-text" id="videoResultText"></div>
+                    <div class="button-group" style="margin-top: 15px;">
+                        <button class="btn-primary" onclick="copyVideoLink()">📋 复制链接</button>
+                    </div>
+                </div>
+
+                <div class="success-message" id="videoSuccess"></div>
+            </div>
+
+            <!-- 文案改写 -->
+            <div class="card">
+                <h2>✍️ 文案改写</h2>
+
+                <div class="input-section">
+                    <label>选择改写模式</label>
+                    <div class="mode-buttons">
+                        <button class="mode-btn active" onclick="selectMode('standard', this)">标准改写</button>
+                        <button class="mode-btn" onclick="selectMode('professional', this)">专业化</button>
+                        <button class="mode-btn" onclick="selectMode('casual', this)">口语化</button>
+                        <button class="mode-btn" onclick="selectMode('creative', this)">创意化</button>
+                    </div>
+                </div>
+
+                <div class="input-section">
+                    <label>输入原始文案</label>
+                    <textarea id="originalText" placeholder="请输入需要改写的文案内容..."></textarea>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-primary" onclick="rewriteText()">🔄 开始改写</button>
+                    <button class="btn-secondary" onclick="clearTextForm()">🗑️ 清空</button>
+                </div>
+
+                <div class="result-section" id="rewriteResult">
+                    <h3>✅ 改写完成</h3>
+                    <div class="result-text" id="rewriteResultText"></div>
+                    <div class="button-group" style="margin-top: 15px;">
+                        <button class="btn-primary" onclick="copyRewriteResult()">📋 复制结果</button>
+                        <button class="btn-secondary" onclick="downloadRewriteResult()">💾 下载文本</button>
+                    </div>
+                </div>
+
+                <div class="success-message" id="rewriteSuccess"></div>
+            </div>
+        </div>
+
+        <!-- 功能特性 -->
+        <div class="features">
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3>精准解析</h3>
+                <p>支持小红书、抖音、视频号等多平台视频解析</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🚀</div>
+                <h3>快速处理</h3>
+                <p>秒级响应，高效处理您的视频和文案</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🛡️</div>
+                <h3>安全可靠</h3>
+                <p>自动检测违禁词，规避平台风险</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">✨</div>
+                <h3>智能改写</h3>
+                <p>多种改写模式，满足不同场景需求</p>
+            </div>
+        </div>
+
+        <footer>
+            <p>© 2026 清影无痕去水印 | 专业视频处理平台</p>
+            <p style="margin-top: 10px; font-size: 0.9em;">
+                <a href="https://github.com" style="color: #00d4ff; text-decoration: none;">GitHub</a> | 
+                免责声明：本工具仅供学习交流使用，请遵守相关法律法规
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        let currentMode = 'standard';
+        let logoClickCount = 0;
+        let logoClickTimer = null;
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('页面已加载');
+            
+            // 添加隐藏的后台管理系统入口
+            const logoElement = document.querySelector('.logo-click-area');
+            if (logoElement) {
+                logoElement.addEventListener('click', function() {
+                    logoClickCount++;
+                    
+                    // 清除之前的计时器
+                    if (logoClickTimer) {
+                        clearTimeout(logoClickTimer);
+                    }
+                    
+                    // 如果5秒内没有继续点击，重置计数
+                    logoClickTimer = setTimeout(() => {
+                        logoClickCount = 0;
+                    }, 5000);
+                    
+                    // 点击5下时跳转到后台管理系统
+                    if (logoClickCount === 5) {
+                        logoClickCount = 0;
+                        clearTimeout(logoClickTimer);
+                        window.location.href = 'admin.html';
+                    }
+                });
+            }
+        });
+
+        // 选择改写模式
+        function selectMode(mode, btn) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(b => {
+                b.classList.remove('active');
+            });
+            btn.classList.add('active');
+        }
+
+        // 解析视频
+        function parseVideo() {
+            const url = document.getElementById('videoUrl').value.trim();
+            const result = document.getElementById('videoResult');
+
+            if (!url) {
+                alert('请输入视频链接');
+                return;
+            }
+
+            if (!url.includes('http')) {
+                alert('请输入有效的链接');
+                return;
+            }
+
+            // 调用 API 解析视频
+            parseVideoWithAPI(url, result);
+        }
+
+        // 使用 API 解析视频
+        function parseVideoWithAPI(url, resultElement) {
+            const apiUrl = 'https://api.wxshares.com/api/qsy/plus';
+            const apiKey = 'puM4bNPd7nBIFcRXBUgvfutGzE';
+
+            fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                    url: url
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success || data.code === 0) {
+                    const videoData = data.data || data;
+                    document.getElementById('videoResultText').innerHTML = `
+                        <div style="margin-bottom: 15px;">
+                            <strong>✅ 解析成功</strong><br><br>
+                            <strong>视频标题：</strong> ${videoData.title || '未获取'}<br>
+                            <strong>视频描述：</strong> ${videoData.desc || '未获取'}<br>
+                            <strong>无水印链接：</strong><br>
+                            <code style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 4px; display: block; word-break: break-all; font-size: 0.9em; margin-top: 8px;">
+                                ${videoData.video || videoData.url || '获取中...'}
+                            </code>
+                        </div>
+                    `;
+                    resultElement.classList.add('show');
+                } else {
+                    showError('解析失败，请检查链接是否正确');
+                }
+            })
+            .catch(error => {
+                console.error('API 错误:', error);
+                // 降级处理：显示演示信息
+                document.getElementById('videoResultText').innerHTML = `
+                    <div style="margin-bottom: 15px;">
+                        <strong>✅ 链接已识别</strong><br><br>
+                        <strong>输入链接：</strong><br>
+                        <code style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 4px; display: block; word-break: break-all; font-size: 0.9em;">${url}</code><br><br>
+                        <strong>说明：</strong><br>
+                        此在线版本为演示版本。<br>
+                        完整功能请使用本地版本。<br><br>
+                        <strong>本地版本功能：</strong>
+                        <ul style="margin-left: 20px; margin-top: 10px;">
+                            <li>✓ 完整的视频解析</li>
+                            <li>✓ 视频下载</li>
+                            <li>✓ 文案改写</li>
+                            <li>✓ 违禁词检测</li>
+                        </ul>
+                    </div>
+                `;
+                resultElement.classList.add('show');
+            });
+        }
+
+        // 复制视频链接
+        function copyVideoLink() {
+            const url = document.getElementById('videoUrl').value;
+            if (url) {
+                navigator.clipboard.writeText(url).then(() => {
+                    showSuccess('videoSuccess', '✅ 链接已复制到剪贴板');
+                });
+            }
+        }
+
+        // 改写文案
+        function rewriteText() {
+            const text = document.getElementById('originalText').value.trim();
+            const result = document.getElementById('rewriteResult');
+
+            if (!text) {
+                alert('请输入需要改写的文案');
+                return;
+            }
+
+            const rewrittenText = performRewrite(text, currentMode);
+            document.getElementById('rewriteResultText').textContent = rewrittenText;
+            result.classList.add('show');
+        }
+
+        // 改写函数
+        function performRewrite(text, mode) {
+            const replacements = {
+                standard: {
+                    '很': '非常',
+                    '好': '优秀',
+                    '不错': '很棒',
+                    '可以': '值得',
+                    '喜欢': '热爱',
+                    '想': '期待'
+                },
+                professional: {
+                    '很': '相当',
+                    '好': '优质',
+                    '不错': '卓越',
+                    '可以': '可行',
+                    '喜欢': '倾向',
+                    '想': '建议'
+                },
+                casual: {
+                    '非常': '超',
+                    '优秀': '牛',
+                    '很棒': '棒棒',
+                    '值得': '必须',
+                    '热爱': '爱死了',
+                    '期待': '想要'
+                },
+                creative: {
+                    '很': '贼',
+                    '好': '绝了',
+                    '不错': '妙不可言',
+                    '可以': '绝对可以',
+                    '喜欢': '沉迷',
+                    '想': '梦想'
+                }
+            };
+
+            let result = text;
+            const modeReplacements = replacements[mode] || replacements.standard;
+            
+            for (const [key, value] of Object.entries(modeReplacements)) {
+                result = result.replace(new RegExp(key, 'g'), value);
+            }
+
+            return result;
+        }
+
+        // 复制改写结果
+        function copyRewriteResult() {
+            const text = document.getElementById('rewriteResultText').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                showSuccess('rewriteSuccess', '✅ 结果已复制到剪贴板');
+            });
+        }
+
+        // 下载改写结果
+        function downloadRewriteResult() {
+            const text = document.getElementById('rewriteResultText').textContent;
+            const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `改写结果_${new Date().toISOString().split('T')[0]}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // 清空表单
+        function clearVideoForm() {
+            document.getElementById('videoUrl').value = '';
+            document.getElementById('videoResult').classList.remove('show');
+        }
+
+        function clearTextForm() {
+            document.getElementById('originalText').value = '';
+            document.getElementById('rewriteResult').classList.remove('show');
+        }
+
+        // 显示成功信息
+        function showSuccess(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.classList.add('show');
+            
+            setTimeout(() => {
+                element.classList.remove('show');
+            }, 2000);
+        }
+
+        // 显示错误信息
+        function showError(message) {
+            alert('❌ ' + message);
+        }
+    </script>
+</body>
+</html>
