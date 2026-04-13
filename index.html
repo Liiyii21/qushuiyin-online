@@ -558,61 +558,93 @@
 
         // 使用 API 解析视频
         function parseVideoWithAPI(url, resultElement) {
-            const apiUrl = 'https://api.wxshares.com/api/qsy/plus';
-            const apiKey = 'puM4bNPd7nBIFcRXBUgvfutGzE';
+            // 显示加载状态
+            document.getElementById('videoResultText').innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 2em; margin-bottom: 10px;">⏳</div>
+                    <strong>正在解析视频...</strong><br>
+                    <span style="color: rgba(255,255,255,0.6); font-size: 0.9em;">请稍候</span>
+                </div>
+            `;
+            resultElement.classList.add('show');
 
-            fetch(apiUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
-                },
-                body: JSON.stringify({
-                    url: url
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success || data.code === 0) {
-                    const videoData = data.data || data;
-                    document.getElementById('videoResultText').innerHTML = `
-                        <div style="margin-bottom: 15px;">
-                            <strong>✅ 解析成功</strong><br><br>
-                            <strong>视频标题：</strong> ${videoData.title || '未获取'}<br>
-                            <strong>视频描述：</strong> ${videoData.desc || '未获取'}<br>
-                            <strong>无水印链接：</strong><br>
-                            <code style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 4px; display: block; word-break: break-all; font-size: 0.9em; margin-top: 8px;">
-                                ${videoData.video || videoData.url || '获取中...'}
-                            </code>
-                        </div>
-                    `;
-                    resultElement.classList.add('show');
-                } else {
-                    showError('解析失败，请检查链接是否正确');
+            // 尝试多个 API
+            const apis = [
+                {
+                    url: 'https://api.wxshares.com/api/qsy/plus',
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer puM4bNPd7nBIFcRXBUgvfutGzE'
+                    },
+                    body: JSON.stringify({ url: url })
                 }
-            })
-            .catch(error => {
-                console.error('API 错误:', error);
-                // 降级处理：显示演示信息
-                document.getElementById('videoResultText').innerHTML = `
-                    <div style="margin-bottom: 15px;">
-                        <strong>✅ 链接已识别</strong><br><br>
-                        <strong>输入链接：</strong><br>
-                        <code style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 4px; display: block; word-break: break-all; font-size: 0.9em;">${url}</code><br><br>
-                        <strong>说明：</strong><br>
-                        此在线版本为演示版本。<br>
-                        完整功能请使用本地版本。<br><br>
-                        <strong>本地版本功能：</strong>
-                        <ul style="margin-left: 20px; margin-top: 10px;">
-                            <li>✓ 完整的视频解析</li>
-                            <li>✓ 视频下载</li>
-                            <li>✓ 文案改写</li>
-                            <li>✓ 违禁词检测</li>
-                        </ul>
-                    </div>
-                `;
-                resultElement.classList.add('show');
-            });
+            ];
+
+            let apiIndex = 0;
+
+            function tryNextApi() {
+                if (apiIndex >= apis.length) {
+                    // 所有 API 都失败，显示演示结果
+                    showDemoResult(url, resultElement);
+                    return;
+                }
+
+                const api = apis[apiIndex];
+                apiIndex++;
+
+                fetch(api.url, {
+                    method: api.method,
+                    headers: api.headers,
+                    body: api.body
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success || data.code === 0 || data.data) {
+                        const videoData = data.data || data;
+                        document.getElementById('videoResultText').innerHTML = `
+                            <div style="margin-bottom: 15px;">
+                                <strong>✅ 解析成功</strong><br><br>
+                                <strong>视频标题：</strong> ${videoData.title || '未获取'}<br>
+                                <strong>视频描述：</strong> ${videoData.desc || '未获取'}<br>
+                                <strong>无水印链接：</strong><br>
+                                <code style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 4px; display: block; word-break: break-all; font-size: 0.9em; margin-top: 8px;">
+                                    ${videoData.video || videoData.url || '获取中...'}
+                                </code>
+                            </div>
+                        `;
+                    } else {
+                        tryNextApi();
+                    }
+                })
+                .catch(error => {
+                    console.error('API 错误:', error);
+                    tryNextApi();
+                });
+            }
+
+            tryNextApi();
+        }
+
+        // 显示演示结果
+        function showDemoResult(url, resultElement) {
+            document.getElementById('videoResultText').innerHTML = `
+                <div style="margin-bottom: 15px;">
+                    <strong>✅ 链接已识别</strong><br><br>
+                    <strong>输入链接：</strong><br>
+                    <code style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 4px; display: block; word-break: break-all; font-size: 0.9em;">${url}</code><br><br>
+                    <strong>📝 说明：</strong><br>
+                    此在线版本为演示版本，API 服务暂时不可用。<br>
+                    完整功能请使用本地版本。<br><br>
+                    <strong>💻 本地版本功能：</strong>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>✓ 完整的视频解析</li>
+                        <li>✓ 视频下载</li>
+                        <li>✓ 文案改写</li>
+                        <li>✓ 违禁词检测</li>
+                    </ul>
+                </div>
+            `;
         }
 
         // 复制视频链接
