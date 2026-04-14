@@ -637,14 +637,23 @@
                             `;
                             resultElement.appendChild(titleDiv);
                             
-                            // 创建视频容器
+                            // 创建视频容器 - 使用 iframe 方式以避免 CORS 问题
                             const videoContainer = document.createElement('div');
-                            videoContainer.style.cssText = 'margin-bottom: 15px; border-radius: 10px; overflow: hidden; background: #000;';
+                            videoContainer.style.cssText = 'margin-bottom: 15px; border-radius: 10px; overflow: hidden; background: #000; position: relative;';
                             videoContainer.innerHTML = `
-                                <video width="100%" height="auto" controls style="border-radius: 10px; display: block; max-width: 100%;">
-                                    <source src="${videoUrl}" type="video/mp4">
-                                    您的浏览器不支持视频预览
-                                </video>
+                                <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                                    <iframe src="${videoUrl}" 
+                                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; border-radius: 10px;"
+                                            allowfullscreen
+                                            allow="autoplay; fullscreen; picture-in-picture">
+                                    </iframe>
+                                </div>
+                                <div style="margin-top: 10px; text-align: center;">
+                                    <a href="${videoUrl}" target="_blank" 
+                                       style="color: #00d4ff; text-decoration: none; font-size: 0.9em; display: inline-block; padding: 8px 16px; background: rgba(0,212,255,0.1); border-radius: 8px; border: 1px solid rgba(0,212,255,0.3);">
+                                        🔗 在新窗口打开视频
+                                    </a>
+                                </div>
                             `;
                             resultElement.appendChild(videoContainer);
                             
@@ -659,12 +668,12 @@
                             `;
                             resultElement.appendChild(linkContainer);
                             
-                            // 添加下载按钮
+                            // 添加操作按钮
                             const buttonGroup = document.createElement('div');
                             buttonGroup.className = 'button-group';
                             buttonGroup.style.marginTop = '15px';
                             buttonGroup.innerHTML = `
-                                <button class="btn-primary" onclick="playVideoInModal('${videoUrl}')">▶️ 播放视频</button>
+                                <button class="btn-primary" onclick="window.open('${videoUrl}', '_blank')">🔗 新窗口打开</button>
                                 <button class="btn-primary" onclick="downloadVideo('${videoUrl}')">⬇️ 下载视频</button>
                                 <button class="btn-secondary" onclick="copyToClipboard('${videoUrl}')">📋 复制链接</button>
                             `;
