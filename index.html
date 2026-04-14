@@ -262,6 +262,8 @@
             transition: all 0.3s ease;
             text-decoration: none;
             display: inline-block;
+            font-size: 1em;
+            font-family: inherit;
         }
 
         .header-btn:hover {
@@ -322,8 +324,8 @@
             <button id="logoutBtn" class="header-btn" style="padding: 8px 16px; font-size: 0.9em;">🚪 登出</button>
         </div>
         <div id="authButtons" style="display: flex; gap: 10px;">
-            <a href="auth.html" class="header-btn" onclick="return navigateToAuth(event)">📝 注册</a>
-            <a href="auth.html" class="header-btn" onclick="return navigateToAuth(event)">🔐 登录</a>
+            <button class="header-btn" onclick="navigateToAuth(event)">📝 注册</button>
+            <button class="header-btn" onclick="navigateToAuth(event)">🔐 登录</button>
         </div>
     </div>
     <div class="container">
@@ -463,9 +465,11 @@
 
         // 导航到登录/注册页面
         function navigateToAuth(event) {
-            event.preventDefault();
-            // 使用完整的 GitHub Pages URL
-            window.location.href = 'https://liiyii21.github.io/qushuiyin-online/auth.html';
+            if (event) {
+                event.preventDefault();
+            }
+            // 使用相对路径，支持本地和 GitHub Pages
+            window.location.href = 'auth.html';
             return false;
         }
 
@@ -558,14 +562,18 @@
 
         // 使用 API 解析视频
         function parseVideoWithAPI(url, resultElement) {
+            // 清空之前的结果
+            resultElement.innerHTML = '';
+            
             // 显示加载状态
-            document.getElementById('videoResultText').innerHTML = `
-                <div style="text-align: center; padding: 20px;">
-                    <div style="font-size: 2em; margin-bottom: 10px;">⏳</div>
-                    <strong>正在解析视频...</strong><br>
-                    <span style="color: rgba(255,255,255,0.6); font-size: 0.9em;">请稍候</span>
-                </div>
+            const loadingDiv = document.createElement('div');
+            loadingDiv.style.cssText = 'text-align: center; padding: 20px;';
+            loadingDiv.innerHTML = `
+                <div style="font-size: 2em; margin-bottom: 10px;">⏳</div>
+                <strong>正在解析视频...</strong><br>
+                <span style="color: rgba(255,255,255,0.6); font-size: 0.9em;">请稍候</span>
             `;
+            resultElement.appendChild(loadingDiv);
             resultElement.classList.add('show');
 
             // 尝试多个 API
@@ -589,6 +597,7 @@
             function tryNextApi() {
                 if (apiIndex >= apis.length) {
                     // 所有 API 都失败，显示演示结果
+                    resultElement.innerHTML = '';
                     showDemoResult(url, resultElement);
                     return;
                 }
@@ -599,27 +608,34 @@
                 fetch(api.url, {
                     method: api.method,
                     headers: api.headers,
-                    body: api.body
+                    body: api.body,
+                    timeout: 10000
                 })
                 .then(response => {
                     console.log('响应状态:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
                     return response.json();
                 })
                 .then(data => {
                     console.log('API 响应:', data);
                     
-                    if (data.code === 200 && data.data) {
+                    if (data && data.code === 200 && data.data) {
                         const videoData = data.data;
                         const videoUrl = videoData.url || '';
                         
                         if (videoUrl) {
-                            document.getElementById('videoResultText').innerHTML = `
-                                <div style="margin-bottom: 15px;">
-                                    <strong>✅ 解析成功</strong><br><br>
-                                    <strong>视频标题：</strong> ${videoData.title || '未获取'}<br>
-                                    <strong>视频描述：</strong> ${videoData.desc || '未获取'}<br>
-                                </div>
+                            resultElement.innerHTML = '';
+                            
+                            const titleDiv = document.createElement('div');
+                            titleDiv.style.cssText = 'margin-bottom: 15px;';
+                            titleDiv.innerHTML = `
+                                <strong>✅ 解析成功</strong><br><br>
+                                <strong>视频标题：</strong> ${videoData.title || '未获取'}<br>
+                                <strong>视频描述：</strong> ${videoData.desc || '未获取'}<br>
                             `;
+                            resultElement.appendChild(titleDiv);
                             
                             // 创建视频容器
                             const videoContainer = document.createElement('div');
@@ -648,6 +664,7 @@
                             buttonGroup.className = 'button-group';
                             buttonGroup.style.marginTop = '15px';
                             buttonGroup.innerHTML = `
+                                <button class="btn-primary" onclick="window.open('${videoUrl}', '_blank')">🎬 在新窗口播放</button>
                                 <button class="btn-primary" onclick="downloadVideo('${videoUrl}')">⬇️ 下载视频</button>
                                 <button class="btn-secondary" onclick="copyToClipboard('${videoUrl}')">📋 复制链接</button>
                             `;
@@ -655,7 +672,7 @@
                             return;
                         }
                     } else {
-                        console.log('API 返回错误:', data.msg);
+                        console.log('API 返回错误:', data.msg || '未知错误');
                     }
                     tryNextApi();
                 })
@@ -679,13 +696,17 @@
 
         // 显示演示结果
         function showDemoResult(url, resultElement) {
-            document.getElementById('videoResultText').innerHTML = `
-                <div style="margin-bottom: 15px;">
-                    <strong>✅ 链接已识别</strong><br><br>
-                    <strong>视频标题：</strong> 示例视频<br>
-                    <strong>视频描述：</strong> 这是一个演示视频<br>
-                </div>
+            // 清空之前的内容
+            resultElement.innerHTML = '';
+            
+            const titleDiv = document.createElement('div');
+            titleDiv.style.cssText = 'margin-bottom: 15px;';
+            titleDiv.innerHTML = `
+                <strong>✅ 链接已识别</strong><br><br>
+                <strong>视频标题：</strong> 示例视频<br>
+                <strong>视频描述：</strong> 这是一个演示视频<br>
             `;
+            resultElement.appendChild(titleDiv);
             
             // 创建视频容器（放在 result-text 之外）
             const videoContainer = document.createElement('div');
@@ -766,22 +787,35 @@
 
         // 视频下载功能
         function downloadVideo(url) {
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `video_${new Date().getTime()}.mp4`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            showSuccess('videoSuccess', '✅ 下载已开始');
+            if (!url) {
+                alert('没有可下载的视频链接');
+                return;
+            }
+            try {
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `video_${new Date().getTime()}.mp4`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                showSuccess('videoSuccess', '✅ 下载已开始');
+            } catch (error) {
+                console.error('下载失败:', error);
+                alert('下载失败，请重试');
+            }
         }
 
         // 复制视频链接
         function copyVideoLink() {
-            const url = document.getElementById('videoUrl').value;
+            const url = document.getElementById('videoUrl').value.trim();
             if (url) {
                 navigator.clipboard.writeText(url).then(() => {
                     showSuccess('videoSuccess', '✅ 链接已复制到剪贴板');
+                }).catch(() => {
+                    alert('复制失败，请手动复制');
                 });
+            } else {
+                alert('请先输入视频链接');
             }
         }
 
@@ -850,32 +884,54 @@
         // 复制改写结果
         function copyRewriteResult() {
             const text = document.getElementById('rewriteResultText').textContent;
-            navigator.clipboard.writeText(text).then(() => {
-                showSuccess('rewriteSuccess', '✅ 结果已复制到剪贴板');
-            });
+            if (text) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showSuccess('rewriteSuccess', '✅ 结果已复制到剪贴板');
+                }).catch(() => {
+                    alert('复制失败，请手动复制');
+                });
+            } else {
+                alert('没有可复制的内容');
+            }
         }
 
         // 下载改写结果
         function downloadRewriteResult() {
             const text = document.getElementById('rewriteResultText').textContent;
-            const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `改写结果_${new Date().toISOString().split('T')[0]}.txt`;
-            a.click();
-            URL.revokeObjectURL(url);
+            if (!text) {
+                alert('没有可下载的内容');
+                return;
+            }
+            try {
+                const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `改写结果_${new Date().toISOString().split('T')[0]}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showSuccess('rewriteSuccess', '✅ 文件已下载');
+            } catch (error) {
+                console.error('下载失败:', error);
+                alert('下载失败，请重试');
+            }
         }
 
         // 清空表单
         function clearVideoForm() {
             document.getElementById('videoUrl').value = '';
-            document.getElementById('videoResult').classList.remove('show');
+            const videoResult = document.getElementById('videoResult');
+            videoResult.innerHTML = '<h3>✅ 解析成功</h3><div class="result-text" id="videoResultText"></div><div class="button-group" style="margin-top: 15px;"><button class="btn-primary" onclick="copyVideoLink()">📋 复制链接</button></div>';
+            videoResult.classList.remove('show');
         }
 
         function clearTextForm() {
             document.getElementById('originalText').value = '';
-            document.getElementById('rewriteResult').classList.remove('show');
+            const rewriteResult = document.getElementById('rewriteResult');
+            rewriteResult.innerHTML = '<h3>✅ 改写完成</h3><div class="result-text" id="rewriteResultText"></div><div class="button-group" style="margin-top: 15px;"><button class="btn-primary" onclick="copyRewriteResult()">📋 复制结果</button><button class="btn-secondary" onclick="downloadRewriteResult()">💾 下载文本</button></div>';
+            rewriteResult.classList.remove('show');
         }
 
         // 显示成功信息
