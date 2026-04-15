@@ -637,59 +637,48 @@
                             `;
                             resultElement.appendChild(titleDiv);
                             
-                            // 创建视频预览容器 - 直接播放
+                            // 创建视频预览提示（由于平台限制，无法直接播放）
                             const videoContainer = document.createElement('div');
-                            videoContainer.style.cssText = 'margin-bottom: 15px; border-radius: 10px; overflow: hidden; background: #000;';
+                            videoContainer.style.cssText = 'margin-bottom: 15px; border-radius: 10px; overflow: hidden; background: linear-gradient(135deg, rgba(0,212,255,0.1) 0%, rgba(120,119,198,0.1) 100%); border: 2px solid rgba(0,212,255,0.3); padding: 30px; text-align: center;';
                             videoContainer.innerHTML = `
-                                <video id="previewVideo" width="100%" height="auto" controls autoplay style="border-radius: 10px; display: block; max-width: 100%;">
-                                    <source src="${videoUrl}" type="video/mp4">
-                                    您的浏览器不支持视频播放
-                                </video>
+                                <div style="font-size: 3em; margin-bottom: 15px;">🎬</div>
+                                <h3 style="color: #00d4ff; margin-bottom: 10px; font-size: 1.3em;">视频解析成功！</h3>
+                                <p style="color: rgba(255,255,255,0.8); margin-bottom: 20px; line-height: 1.6;">
+                                    由于视频平台的防盗链保护，无法直接在网页中播放<br>
+                                    请使用下方按钮下载或在新窗口中打开视频
+                                </p>
+                                <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                                    <button onclick="downloadVideo('${videoUrl}')" 
+                                            style="padding: 12px 24px; background: linear-gradient(135deg, #00d4ff 0%, #7877c6 100%); 
+                                                   border: none; border-radius: 10px; color: white; cursor: pointer; font-weight: 600; font-size: 1em;
+                                                   box-shadow: 0 4px 15px rgba(0,212,255,0.3); transition: all 0.3s ease;">
+                                        ⬇️ 下载视频
+                                    </button>
+                                    <button onclick="window.open('${videoUrl}', '_blank')" 
+                                            style="padding: 12px 24px; background: rgba(255,255,255,0.1); 
+                                                   border: 1px solid rgba(255,255,255,0.3); border-radius: 10px; color: white; cursor: pointer; font-weight: 600; font-size: 1em;
+                                                   transition: all 0.3s ease;">
+                                        🔗 新窗口打开
+                                    </button>
+                                </div>
                             `;
                             resultElement.appendChild(videoContainer);
                             
-                            // 监听视频加载错误，如果无法播放则提示用户
-                            setTimeout(() => {
-                                const video = document.getElementById('previewVideo');
-                                if (video) {
-                                    video.addEventListener('error', function() {
-                                        videoContainer.innerHTML = `
-                                            <div style="padding: 40px; text-align: center; background: rgba(255,0,0,0.1); border: 1px solid rgba(255,0,0,0.3); border-radius: 10px;">
-                                                <div style="font-size: 2em; margin-bottom: 10px;">⚠️</div>
-                                                <strong style="color: #ff6b6b;">视频无法直接播放</strong><br>
-                                                <span style="color: rgba(255,255,255,0.7); font-size: 0.9em;">由于平台限制，请点击下方按钮在新窗口打开</span><br>
-                                                <button onclick="window.open('${videoUrl}', '_blank')" 
-                                                        style="margin-top: 15px; padding: 10px 20px; background: linear-gradient(135deg, #00d4ff 0%, #7877c6 100%); 
-                                                               border: none; border-radius: 8px; color: white; cursor: pointer; font-weight: 600;">
-                                                    🔗 在新窗口打开视频
-                                                </button>
-                                            </div>
-                                        `;
-                                    });
-                                }
-                            }, 100);
-                            
-                            // 添加无水印链接
+                            // 添加无水印链接显示
                             const linkContainer = document.createElement('div');
-                            linkContainer.style.cssText = 'margin-top: 15px; padding: 15px; background: rgba(0, 212, 255, 0.1); border: 1px solid rgba(0, 212, 255, 0.3); border-radius: 10px;';
+                            linkContainer.style.cssText = 'margin-top: 15px; padding: 15px; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(0, 212, 255, 0.3); border-radius: 10px;';
                             linkContainer.innerHTML = `
-                                <strong style="color: #00d4ff;">🔗 无水印链接：</strong><br>
-                                <code style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 4px; display: block; word-break: break-all; font-size: 0.9em; margin-top: 8px; color: #00ff88;">
+                                <strong style="color: #00d4ff;">🔗 无水印视频链接：</strong><br>
+                                <code style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 4px; display: block; word-break: break-all; font-size: 0.85em; margin-top: 8px; color: #00ff88; line-height: 1.5;">
                                     ${videoUrl}
                                 </code>
+                                <button onclick="copyToClipboard('${videoUrl}')" 
+                                        style="margin-top: 10px; padding: 8px 16px; background: rgba(0,212,255,0.2); 
+                                               border: 1px solid rgba(0,212,255,0.5); border-radius: 8px; color: #00d4ff; cursor: pointer; font-weight: 600; font-size: 0.9em;">
+                                    📋 复制链接
+                                </button>
                             `;
                             resultElement.appendChild(linkContainer);
-                            
-                            // 添加操作按钮
-                            const buttonGroup = document.createElement('div');
-                            buttonGroup.className = 'button-group';
-                            buttonGroup.style.marginTop = '15px';
-                            buttonGroup.innerHTML = `
-                                <button class="btn-primary" onclick="downloadVideo('${videoUrl}')">⬇️ 下载视频</button>
-                                <button class="btn-secondary" onclick="copyToClipboard('${videoUrl}')">📋 复制链接</button>
-                                <button class="btn-secondary" onclick="window.open('${videoUrl}', '_blank')">🔗 新窗口打开</button>
-                            `;
-                            resultElement.appendChild(buttonGroup);
                             return;
                         }
                     } else {
