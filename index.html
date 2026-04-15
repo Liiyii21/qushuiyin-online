@@ -637,25 +637,37 @@
                             `;
                             resultElement.appendChild(titleDiv);
                             
-                            // 创建视频容器 - 使用 iframe 方式以避免 CORS 问题
+                            // 创建视频预览容器 - 直接播放
                             const videoContainer = document.createElement('div');
-                            videoContainer.style.cssText = 'margin-bottom: 15px; border-radius: 10px; overflow: hidden; background: #000; position: relative;';
+                            videoContainer.style.cssText = 'margin-bottom: 15px; border-radius: 10px; overflow: hidden; background: #000;';
                             videoContainer.innerHTML = `
-                                <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
-                                    <iframe src="${videoUrl}" 
-                                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; border-radius: 10px;"
-                                            allowfullscreen
-                                            allow="autoplay; fullscreen; picture-in-picture">
-                                    </iframe>
-                                </div>
-                                <div style="margin-top: 10px; text-align: center;">
-                                    <a href="${videoUrl}" target="_blank" 
-                                       style="color: #00d4ff; text-decoration: none; font-size: 0.9em; display: inline-block; padding: 8px 16px; background: rgba(0,212,255,0.1); border-radius: 8px; border: 1px solid rgba(0,212,255,0.3);">
-                                        🔗 在新窗口打开视频
-                                    </a>
-                                </div>
+                                <video id="previewVideo" width="100%" height="auto" controls autoplay style="border-radius: 10px; display: block; max-width: 100%;">
+                                    <source src="${videoUrl}" type="video/mp4">
+                                    您的浏览器不支持视频播放
+                                </video>
                             `;
                             resultElement.appendChild(videoContainer);
+                            
+                            // 监听视频加载错误，如果无法播放则提示用户
+                            setTimeout(() => {
+                                const video = document.getElementById('previewVideo');
+                                if (video) {
+                                    video.addEventListener('error', function() {
+                                        videoContainer.innerHTML = `
+                                            <div style="padding: 40px; text-align: center; background: rgba(255,0,0,0.1); border: 1px solid rgba(255,0,0,0.3); border-radius: 10px;">
+                                                <div style="font-size: 2em; margin-bottom: 10px;">⚠️</div>
+                                                <strong style="color: #ff6b6b;">视频无法直接播放</strong><br>
+                                                <span style="color: rgba(255,255,255,0.7); font-size: 0.9em;">由于平台限制，请点击下方按钮在新窗口打开</span><br>
+                                                <button onclick="window.open('${videoUrl}', '_blank')" 
+                                                        style="margin-top: 15px; padding: 10px 20px; background: linear-gradient(135deg, #00d4ff 0%, #7877c6 100%); 
+                                                               border: none; border-radius: 8px; color: white; cursor: pointer; font-weight: 600;">
+                                                    🔗 在新窗口打开视频
+                                                </button>
+                                            </div>
+                                        `;
+                                    });
+                                }
+                            }, 100);
                             
                             // 添加无水印链接
                             const linkContainer = document.createElement('div');
@@ -673,9 +685,9 @@
                             buttonGroup.className = 'button-group';
                             buttonGroup.style.marginTop = '15px';
                             buttonGroup.innerHTML = `
-                                <button class="btn-primary" onclick="window.open('${videoUrl}', '_blank')">🔗 新窗口打开</button>
                                 <button class="btn-primary" onclick="downloadVideo('${videoUrl}')">⬇️ 下载视频</button>
                                 <button class="btn-secondary" onclick="copyToClipboard('${videoUrl}')">📋 复制链接</button>
+                                <button class="btn-secondary" onclick="window.open('${videoUrl}', '_blank')">🔗 新窗口打开</button>
                             `;
                             resultElement.appendChild(buttonGroup);
                             return;
